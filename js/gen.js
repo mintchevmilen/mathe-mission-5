@@ -158,6 +158,8 @@ GEN.t101 = function(l){
   var len = l===1?4:(l===2?6:7);
   var z=''; for(var i=0;i<len;i++) z += String(i===0?R(1,9):R(0,9));
   var n = parseInt(z,10), pos = R(0, len-1);
+  var nz = []; for(var q=0;q<len;q++) if(z.charAt(len-1-q)!=='0') nz.push(q);
+  pos = pick(nz);
   var ziffer = parseInt(z.charAt(len-1-pos),10);
   if(l===1){
     return mc('Welchen Stellenwert hat die <b>farbig markierte</b> Ziffer?<br><span style="font-size:24px;font-weight:800">'+markiereZiffer(n,pos)+'</span>',
@@ -172,7 +174,7 @@ GEN.t101 = function(l){
   var a=R(1,9),b=R(1,9),c=R(1,9);
   var erg = a*1000000 + b*10000 + c*10;
   return num('Schreibe als Zahl: '+a+' Millionen, '+b+' Zehntausender und '+c+' Zehner.',
-    erg, 'Setze in die Stellenwerttafel ein und fülle leere Stellen mit 0:  '+a+' 0'+b+' 0'+c+'0  →  '+nf(erg)+'.');
+    erg, 'Setze in die Stellenwerttafel ein und fülle leere Stellen mit 0:  M='+a+', HT=0, ZT='+b+', T=0, H=0, Z='+c+', E=0  →  '+nf(erg)+'.');
 };
 
 GEN.t102 = function(l){
@@ -183,8 +185,9 @@ GEN.t102 = function(l){
       'Vergleiche Stelle für Stelle von links. '+nf(a)+' '+(a<b?'<':'>')+' '+nf(b)+'.');
   }
   if(l===2){
-    var base=R(10000,80000), zs=[base,base+R(1,60),base+R(100,900),base-R(1,90)];
-    zs=zs.filter(function(v,i,arr){return arr.indexOf(v)===i;});
+    var zs;
+    do { var base=R(10000,80000); zs=[base,base+R(1,60),base+R(100,900),base-R(1,90)]; }
+    while(zs.filter(function(v,i,arr){return arr.indexOf(v)===i;}).length<4);
     var sorted=zs.slice().sort(function(x,y){return x-y;});
     return order('Ordne die Zahlen der Größe nach — beginne mit der <b>kleinsten</b>.',
       sorted.map(nf), 'Zuerst die Stellenanzahl vergleichen, dann von links Ziffer für Ziffer.');
@@ -237,19 +240,22 @@ GEN.t105 = function(l){
 };
 
 GEN.t106 = function(l){
-  var tage=['Mo','Di','Mi','Do','Fr'], w=[R(4,20),R(4,20),R(4,20),R(4,20),R(4,20)];
+  var tage=['Mo','Di','Mi','Do','Fr'], w, mx, mn;
+  do { w=[R(4,20),R(4,20),R(4,20),R(4,20),R(4,20)]; mx=Math.max.apply(null,w); mn=Math.min.apply(null,w); }
+  while(w.filter(function(v){return v===mx;}).length>1 || w.filter(function(v){return v===mn;}).length>1);
+  var kontexte=['In der Schulbibliothek wurden in einer Woche Bücher ausgeliehen.','Der Schulkiosk hat in einer Woche Brötchen verkauft.','Eine Klasse hat in einer Woche Pfandflaschen gesammelt.','Im Schwimmbad wurden in einer Woche Eintrittskarten für Kinder verkauft.'];
+  var kontext=pick(kontexte);
   var g=svgSaeulen(tage,w);
   var sum=w.reduce(function(a,b){return a+b;},0);
-  var mx=Math.max.apply(null,w), mn=Math.min.apply(null,w);
   if(l===1){
     var i=R(0,4);
-    return num('Wie viele waren es am '+tage[i]+'?', w[i], 'Lies die Höhe der Säule '+tage[i]+' ab: '+w[i]+'.', {grafik:g});
+    return num(kontext+'<br>Wie viele waren es am '+tage[i]+'?', w[i], 'Lies die Höhe der Säule '+tage[i]+' ab: '+w[i]+'.', {grafik:g});
   }
   if(l===2){
-    return num('Wie viele waren es in der ganzen Woche <b>insgesamt</b>?', sum,
+    return num(kontext+'<br>Wie viele waren es in der ganzen Woche <b>insgesamt</b>?', sum,
       w.join(' + ')+' = '+sum+'.', {grafik:g});
   }
-  return num('Wie groß ist der <b>Unterschied</b> zwischen dem besten und dem schwächsten Tag?', mx-mn,
+  return num(kontext+'<br>Wie groß ist der <b>Unterschied</b> zwischen dem stärksten und dem schwächsten Tag?', mx-mn,
     'Größter Wert '+mx+', kleinster Wert '+mn+'.  '+mx+' − '+mn+' = '+(mx-mn)+'.', {grafik:g});
 };
 
@@ -258,7 +264,7 @@ GEN.t201 = function(l){
   if(l===1){
     var a=R(20,89), b=R(11,49);
     if(R(0,1)) return num('Berechne im Kopf:  '+a+' + '+b, a+b, a+' + '+b+' = '+a+' + '+(Math.floor(b/10)*10)+' + '+(b%10)+' = '+(a+Math.floor(b/10)*10)+' + '+(b%10)+' = '+(a+b)+'.');
-    if(a<b){var t=a;a=b;b=t;}
+    if(a<=b){var t=a;a=b+R(1,15);b=b;}
     var zb=Math.floor(b/10)*10, eb=b%10;
     return num('Berechne im Kopf:  '+a+' − '+b, a-b,
       'Zerlege '+b+' in '+zb+' + '+eb+':  '+a+' − '+zb+' = '+(a-zb)+',  dann '+(a-zb)+' − '+eb+' = '+(a-b)+'.');
@@ -304,7 +310,7 @@ GEN.t203 = function(l){
 GEN.t204 = function(l){
   var a,b;
   if(l===1){ a=R(23,99); b=R(3,9); return num('Rechne schriftlich:  '+a+' · '+b, a*b, a+' · '+b+' = '+(Math.floor(a/10)*10)+' · '+b+' + '+(a%10)+' · '+b+' = '+(Math.floor(a/10)*10*b)+' + '+((a%10)*b)+' = '+(a*b)+'.'); }
-  if(l===2){ a=R(112,899); b=R(12,49);
+  if(l===2){ a=R(112,899); b=R(12,49); if(b%10===0) b++;
     return steps('Rechne schriftlich:  '+a+' · '+b,
       [{frage:'Teilprodukt 1:  '+a+' · '+(b%10)+' = ?', loesung:String(a*(b%10)), tipp:'Erst mit der Einerziffer.'},
        {frage:'Teilprodukt 2:  '+a+' · '+(Math.floor(b/10)*10)+' = ?', loesung:String(a*Math.floor(b/10)*10), tipp:'Jetzt mit der Zehnerziffer — eine Stelle nach links.'},
@@ -362,7 +368,7 @@ GEN.t206 = function(l){
       'Zuerst '+p+' · '+q+' = '+(p*q)+'. Dann von links: '+s+' − '+(p*q)+' = '+(s-p*q)+', + '+r+' = '+(s-p*q+r)+'.');
   }
   var x=R(2,9),y=R(2,9),z=R(2,9);
-  var w=R(2, Math.max(2, Math.min(9, Math.floor((x+y)*z/2))));
+  var w=R(2, Math.max(2, Math.min(9, Math.floor(((x+y)*z-1)/2))));
   var erg = (x+y)*z - w*2;
   return steps('Berechne:  ('+x+' + '+y+') · '+z+' − '+w+' · 2',
     [{frage:'Schritt 1 — Klammer:  '+x+' + '+y+' = ?', loesung:String(x+y), tipp:'Klammern haben Vorrang.'},
@@ -374,10 +380,18 @@ GEN.t206 = function(l){
 
 GEN.t207 = function(l){
   if(l===1){
-    var a=R(2,12),b=R(2,12);
-    return mc('Wie heißt das Gesetz:  '+a+' · '+b+' = '+b+' · '+a+' ?','Kommutativgesetz (Vertauschgesetz)',
-      ['Assoziativgesetz (Verbindungsgesetz)','Distributivgesetz (Verteilungsgesetz)','Rundungsregel'],
-      'Beim Kommutativgesetz werden die Zahlen vertauscht — das Ergebnis bleibt gleich.');
+    var a=R(2,12),b=R(2,12); while(b===a) b=R(2,12);
+    var c3=R(2,9);
+    var K='Kommutativgesetz (Vertauschgesetz)', A='Assoziativgesetz (Verbindungsgesetz)', D='Distributivgesetz (Verteilungsgesetz)';
+    var fall=pick([
+      [a+' · '+b+' = '+b+' · '+a, K, 'Hier werden die Zahlen vertauscht, das Ergebnis bleibt gleich.'],
+      [a+' + '+b+' = '+b+' + '+a, K, 'Auch beim Addieren darf man vertauschen.'],
+      ['('+a+' + '+b+') + '+c3+' = '+a+' + ('+b+' + '+c3+')', A, 'Hier ändert sich nur, wo die Klammer steht. Das ist das Verbindungsgesetz.'],
+      ['('+a+' · '+b+') · '+c3+' = '+a+' · ('+b+' · '+c3+')', A, 'Die Klammer wandert, die Reihenfolge der Zahlen bleibt. Das ist das Verbindungsgesetz.'],
+      [c3+' · ('+a+' + '+b+') = '+c3+' · '+a+' + '+c3+' · '+b, D, 'Der Faktor wird auf jeden Summanden verteilt. Das ist das Verteilungsgesetz.']
+    ]);
+    return mc('Welches Rechengesetz steckt hier drin?<br>'+fall[0], fall[1],
+      [K,A,D].filter(function(x){return x!==fall[1];}).concat(['Rundungsregel']), fall[2]);
   }
   if(l===2){
     if(R(0,1)){
@@ -519,12 +533,12 @@ GEN.t302 = function(l){
     return num('Wie viele Kilogramm sind '+t+' t '+kg2+' kg?', t*1000+kg2, '1 t = 1000 kg → '+nf(t*1000+kg2)+' kg.', {einheit:'kg'});
   }
   var stk=R(6,24), gew=pick([125,250,375,450,750]);
-  return num(stk+' Packungen wiegen je '+gew+' g. Wie viel Kilogramm sind das zusammen? (Antwort in Gramm)',
+  return num(stk+' Packungen wiegen je '+gew+' g. Wie viel wiegen sie zusammen? (Antwort in Gramm)',
     stk*gew, stk+' · '+gew+' g = '+nf(stk*gew)+' g = '+kf(stk*gew/1000)+' kg.', {einheit:'g'});
 };
 
 GEN.t303 = function(l){
-  var h1=R(7,20), m1=pick([0,5,10,15,20,25,30,35,40,45,50,55]);
+  var h1=R(14,20), m1=pick([0,5,10,15,20,25,30,35,40,45,50,55]);
   if(l===1){
     var dauer=pick([20,30,45,50]);
     var tot=h1*60+m1+dauer;
@@ -533,13 +547,13 @@ GEN.t303 = function(l){
       m1+' + '+dauer+' Minuten → '+Math.floor(tot/60)+':'+(tot%60<10?'0':'')+(tot%60)+' Uhr.');
   }
   if(l===2){
-    var min=R(70,240);
+    var min=R(70,240); if(min%60===0) min+=R(5,55);
     return steps(min+' Minuten — wie viel ist das in Stunden und Minuten?',
       [{frage:'Volle Stunden = ?', loesung:String(Math.floor(min/60)), tipp:min+' : 60 — nur die ganzen Stunden.'},
        {frage:'Restliche Minuten = ?', loesung:String(min%60), tipp:'Was bleibt übrig?'}],
       min+' min = '+Math.floor(min/60)+' h '+(min%60)+' min, denn '+Math.floor(min/60)+' · 60 = '+(Math.floor(min/60)*60)+' und '+min+' − '+(Math.floor(min/60)*60)+' = '+(min%60)+'.');
   }
-  var s1=R(6,10), sm=pick([10,20,25,40,50]), s2=R(13,18), sm2=pick([5,15,35,45]);
+  var s1=R(7,8), sm=pick([0,10,20,30,40,50]), s2=R(12,15), sm2=pick([5,15,35,45]);
   var span=(s2*60+sm2)-(s1*60+sm);
   return num('Der Unterricht beginnt um '+s1+':'+(sm<10?'0':'')+sm+' Uhr und endet um '+s2+':'+(sm2<10?'0':'')+sm2+' Uhr. Wie lang ist das in Minuten?',
     span, 'Von '+s1+':'+(sm<10?'0':'')+sm+' bis '+s2+':'+(sm2<10?'0':'')+sm2+' sind es '+Math.floor(span/60)+' h '+(span%60)+' min = '+span+' Minuten.', {einheit:'min'});
@@ -600,17 +614,23 @@ GEN.t306 = function(l){
 /* =================== KAPITEL 4 — Geometrie: Figuren =================== */
 GEN.t401 = function(l){
   if(l===1){
-    return mc('Welche Linie hat <b>zwei</b> Endpunkte?','die Strecke',
-      ['die Gerade','die Halbgerade','der Strahl'],
-      'Eine Strecke [AB] beginnt in A und endet in B — sie hat eine messbare Länge.');
+    return pick([
+      function(){ return mc('Welche Linie hat <b>zwei</b> Endpunkte?','die Strecke',['die Gerade','die Halbgerade','der Punkt'],'Eine Strecke [AB] beginnt in A und endet in B. Sie hat eine messbare Länge.'); },
+      function(){ return mc('Welche Linie hat <b>keinen</b> Anfang und <b>kein</b> Ende?','die Gerade',['die Strecke','die Halbgerade','der Punkt'],'Eine Gerade geht in beide Richtungen unendlich weiter.'); },
+      function(){ return mc('Welche Linie hat <b>genau einen</b> Anfangspunkt und geht dann unendlich weiter?','die Halbgerade',['die Strecke','die Gerade','der Kreis'],'Eine Halbgerade beginnt in einem Punkt und geht nur in eine Richtung weiter.'); }
+    ])();
   }
   if(l===2){
-    return match('Ordne richtig zu.',
-      [['Strecke [AB]','zwei Endpunkte'],['Gerade AB','kein Anfang, kein Ende'],['Halbgerade [AB','ein Anfangspunkt'],['Punkt A','keine Ausdehnung']],
+    var alle=[['Strecke [AB]','zwei Endpunkte'],['Gerade AB','kein Anfang, kein Ende'],['Halbgerade [AB','ein Anfangspunkt'],['Punkt A','keine Ausdehnung'],['Länge einer Strecke','kann man messen'],['Gerade','kann man nicht messen']];
+    return match('Ordne richtig zu.', shuffle(alle).slice(0,4),
       'Strecke = begrenzt, Gerade = unbegrenzt, Halbgerade = einseitig begrenzt.');
   }
-  return tf('Durch zwei verschiedene Punkte lässt sich genau eine Gerade zeichnen.', true,
-    'Ja — zwei Punkte legen eine Gerade eindeutig fest.');
+  return pick([
+    function(){ return tf('Durch zwei verschiedene Punkte lässt sich genau eine Gerade zeichnen.', true,'Ja, zwei Punkte legen eine Gerade eindeutig fest.'); },
+    function(){ return tf('Durch zwei verschiedene Punkte lassen sich viele verschiedene Geraden zeichnen.', false,'Nein. Zwei Punkte legen genau eine Gerade fest.'); },
+    function(){ return tf('Eine Strecke kann man messen, eine Gerade nicht.', true,'Eine Strecke hat zwei Endpunkte und damit eine Länge. Eine Gerade hat keine.'); },
+    function(){ return tf('Eine Halbgerade hat zwei Endpunkte.', false,'Nein. Sie hat nur einen Anfangspunkt und geht dann unendlich weiter.'); }
+  ])();
 };
 
 GEN.t402 = function(l){
@@ -619,8 +639,12 @@ GEN.t402 = function(l){
       ['parallel','schief','symmetrisch'],'Rechter Winkel (90°) → die Linien stehen senkrecht zueinander. Zeichen: ⊥');
   }
   if(l===2){
-    return tf('Parallele Geraden haben überall den gleichen Abstand.', true,
-      'Genau — deshalb schneiden sie sich nie. Zeichen: ∥');
+    return pick([
+      function(){ return tf('Parallele Geraden haben überall den gleichen Abstand.', true,'Genau, deshalb schneiden sie sich nie. Zeichen: ∥'); },
+      function(){ return tf('Parallele Geraden schneiden sich irgendwann.', false,'Nein. Parallele Geraden schneiden sich nie.'); },
+      function(){ return tf('Senkrechte Geraden bilden einen rechten Winkel.', true,'Ja, 90°. Zeichen: ⊥'); },
+      function(){ return tf('Zwei Geraden, die sich in einem 45°-Winkel schneiden, sind senkrecht zueinander.', false,'Nein. Senkrecht heißt: rechter Winkel, also 90°.'); }
+    ])();
   }
   return mc('Wie stehen gegenüberliegende Seiten eines Rechtecks zueinander?','parallel',
     ['senkrecht','schief','sie schneiden sich'],
@@ -630,9 +654,9 @@ GEN.t402 = function(l){
 GEN.t403 = function(l){
   var max=10;
   if(l===1){
-    var x=R(1,9), y=R(1,9);
-    return num('Wie lautet der x-Wert des Punktes P? Schreibe nur die Zahl.', x,
-      'Zuerst nach rechts (x-Achse), dann nach oben (y-Achse). P('+x+'|'+y+') → x = '+x+'.',
+    var x=R(1,9), y=R(1,9), fragx=R(0,1)===0;
+    return num('Wie lautet der '+(fragx?'x':'y')+'-Wert des Punktes P? Schreibe nur die Zahl.', fragx?x:y,
+      'Zuerst nach rechts (x-Achse), dann nach oben (y-Achse). P('+x+'|'+y+') → '+(fragx?'x':'y')+' = '+(fragx?x:y)+'.',
       {grafik: svgKoord([[x,y,'P']], max, 0)});
   }
   if(l===2){
@@ -667,25 +691,33 @@ GEN.t404 = function(l){
     return match('Ordne jedem Viereck sein Merkmal zu.',
       shuffle(defs).slice(0,4), 'Achte besonders auf den Unterschied zwischen Raute (gleiche Seiten) und Rechteck (rechte Winkel).');
   }
-  return tf('Jedes Quadrat ist auch ein Rechteck.', true,
-    'Ja. Ein Quadrat erfüllt alle Bedingungen eines Rechtecks (4 rechte Winkel) — zusätzlich sind alle Seiten gleich lang. Umgekehrt gilt das nicht.');
+  return pick([
+    function(){ return tf('Jedes Quadrat ist auch ein Rechteck.', true,'Ja. Ein Quadrat hat 4 rechte Winkel und erfüllt damit alle Bedingungen eines Rechtecks. Umgekehrt gilt das nicht.'); },
+    function(){ return tf('Jedes Rechteck ist auch ein Quadrat.', false,'Nein. Beim Rechteck müssen nicht alle Seiten gleich lang sein.'); },
+    function(){ return tf('Jede Raute ist auch ein Parallelogramm.', true,'Ja. Bei der Raute sind gegenüberliegende Seiten parallel.'); },
+    function(){ return tf('Jedes Trapez hat vier gleich lange Seiten.', false,'Nein. Ein Trapez hat nur mindestens ein Paar paralleler Seiten.'); }
+  ])();
 };
 
 GEN.t405 = function(l){
-  var achsen={'Quadrat':4,'Rechteck (kein Quadrat)':2,'Raute (kein Quadrat)':2,'gleichseitiges Dreieck':3,'Kreis':'unendlich viele','Parallelogramm (schief)':0};
-  var keys=Object.keys(achsen);
+  var achsen={'Rechteck (kein Quadrat)':2,'Raute (kein Quadrat)':2,'gleichseitiges Dreieck':3,'gleichschenkliges Dreieck (nicht gleichseitig)':1,'regelmäßiges Fünfeck':5,'regelmäßiges Sechseck':6,'Halbkreis':1};
   if(l===1){
-    return mc('Wie viele Symmetrieachsen hat ein Quadrat?','4',['2','1','8'],
-      'Zwei Mittellinien (waagerecht und senkrecht) und zwei Diagonalen — zusammen 4 Achsen.');
+    return pick([
+      function(){ return mc('Wie viele Symmetrieachsen hat ein Quadrat?','4',['2','1','8'],'Zwei Mittellinien (waagerecht und senkrecht) und zwei Diagonalen, zusammen 4 Achsen.'); },
+      function(){ return mc('Wie viele Symmetrieachsen hat ein Kreis?','unendlich viele',['4','1','keine'],'Jede Gerade durch den Mittelpunkt ist eine Symmetrieachse.'); },
+      function(){ return mc('Was ist eine Symmetrieachse?','Eine Gerade, an der man die Figur so falten kann, dass beide Hälften genau aufeinander liegen.',
+        ['Die längste Seite der Figur.','Eine Gerade, die die Figur nicht berührt.','Der Mittelpunkt der Figur.'],'Beim Falten an der Achse decken sich die beiden Hälften.'); }
+    ])();
   }
   if(l===2){
-    var k=pick(['Rechteck (kein Quadrat)','Raute (kein Quadrat)','gleichseitiges Dreieck']);
+    var k=pick(Object.keys(achsen));
     return num('Wie viele Symmetrieachsen hat ein '+k+'? Schreibe nur die Zahl.', achsen[k],
       k+' → '+achsen[k]+' Symmetrieachsen.');
   }
+  var mit=shuffle(['ein Quadrat','ein Kreis','ein Rechteck','eine Raute','ein gleichseitiges Dreieck']);
   return mc('Welche Figur hat <b>keine</b> Symmetrieachse?','ein schiefes Parallelogramm',
-    ['ein Quadrat','ein Kreis','ein Rechteck'],
-    'Ein schiefes Parallelogramm ist punktsymmetrisch, aber nicht achsensymmetrisch.');
+    mit.slice(0,3),
+    'Ein schiefes Parallelogramm ist punktsymmetrisch, aber nicht achsensymmetrisch. Die anderen Figuren lassen sich falten.');
 };
 
 GEN.t406 = function(l){
@@ -743,7 +775,7 @@ GEN.t503 = function(l){
       'A = a · a = '+a+' · '+a+' = '+(a*a)+' cm^{2}.', {einheit:'cm²', grafik: svgRechteck(a,a,'cm','cm','Quadrat')});
   }
   if(l===2){
-    var x=R(4,20), y=R(3,x);
+    var x=R(4,20), y=R(3,x-1);
     return num('Wie groß ist der Flächeninhalt dieses Rechtecks?', x*y,
       'A = a · b = '+x+' cm · '+y+' cm = '+(x*y)+' cm^{2}.', {einheit:'cm²', grafik: svgRechteck(x,y,'cm','cm')});
   }
@@ -757,7 +789,7 @@ GEN.t503 = function(l){
 GEN.t504 = function(l){
   var A=R(8,14), B=R(5,9), c=R(2,A-3), d=R(2,B-2);
   if(l===1){
-    return num('Berechne den Flächeninhalt der grauen Figur. (Antwort in cm^{2})', A*B-c*d,
+    return num('Berechne den Flächeninhalt der farbigen Figur. (Antwort in cm^{2})', A*B-c*d,
       'Großes Rechteck: '+A+' · '+B+' = '+(A*B)+' cm^{2}.  Fehlende Ecke: '+c+' · '+d+' = '+(c*d)+' cm^{2}.  '+(A*B)+' − '+(c*d)+' = '+(A*B-c*d)+' cm^{2}.',
       {einheit:'cm²', grafik: svgLFigur(A,B,c,d)});
   }
@@ -775,15 +807,18 @@ GEN.t504 = function(l){
 
 /* =================== KAPITEL 6 — Körper =================== */
 GEN.t601 = function(l){
-  var koerper=[['Würfel',8,12,6],['Quader',8,12,6]];
+  var koerper=[['Würfel',8,12,6],['Quader',8,12,6],['Pyramide mit quadratischer Grundfläche',5,8,5],['Dreiecksprisma',6,9,5]];
   if(l===1){
-    return mc('Welcher Körper hat weder Ecken noch Kanten?','Kugel',['Würfel','Quader','Pyramide'],
-      'Die Kugel ist rundum gekrümmt — keine Ecke, keine Kante, nur eine gebogene Fläche.');
+    return pick([
+      function(){ return mc('Welcher Körper hat weder Ecken noch Kanten?','Kugel',['Würfel','Quader','Pyramide'],'Die Kugel ist rundum gekrümmt: keine Ecke, keine Kante, nur eine gebogene Fläche.'); },
+      function(){ return mc('Welcher Körper hat eine Spitze und eine runde Grundfläche?','Kegel',['Zylinder','Würfel','Kugel'],'Der Kegel hat einen Kreis als Boden und läuft oben in eine Spitze zu.'); },
+      function(){ return mc('Welcher Körper hat zwei gleich große Kreise als Grund- und Deckfläche?','Zylinder',['Kegel','Quader','Kugel'],'Der Zylinder hat oben und unten einen Kreis und dazwischen eine gebogene Fläche.'); }
+    ])();
   }
   if(l===2){
     var k=pick(koerper), was=pick([['Ecken',1],['Kanten',2],['Flächen',3]]);
-    return num('Wie viele '+was[0]+' hat ein '+k[0]+'?', k[was[1]],
-      'Ein '+k[0]+' hat 8 Ecken, 12 Kanten und 6 Flächen.');
+    return num('Wie viele '+was[0]+' hat '+(k[0]==='Würfel'||k[0]==='Quader'?'ein ':'eine ')+k[0]+'?', k[was[1]],
+      k[0]+': '+k[1]+' Ecken, '+k[2]+' Kanten und '+k[3]+' Flächen.');
   }
   return match('Ordne die Körper ihren Eigenschaften zu.',
     [['Würfel','6 gleich große Quadrate'],['Zylinder','2 Kreise und eine gebogene Fläche'],
@@ -793,16 +828,22 @@ GEN.t601 = function(l){
 
 GEN.t602 = function(l){
   if(l===1){
-    return num('Aus wie vielen Quadraten besteht das Netz eines Würfels?', 6,
-      'Ein Würfel hat 6 Flächen — im Netz erscheint jede genau einmal.');
+    return pick([
+      function(){ return num('Aus wie vielen Quadraten besteht das Netz eines Würfels?', 6,'Ein Würfel hat 6 Flächen. Im Netz erscheint jede genau einmal.'); },
+      function(){ return num('Wie viele Rechtecke braucht man für das Netz eines Quaders (ohne Quadrate)?', 6,'Ein Quader hat 6 Flächen, die alle Rechtecke sind.'); },
+      function(){ return num('Wie viele Flächen hat ein Würfel?', 6,'Oben, unten und vier Seiten: zusammen 6.'); }
+    ])();
   }
   if(l===2){
     var a=R(2,9), b=R(2,9), c=R(2,9);
     return num('Ein Quader ist '+a+' cm · '+b+' cm · '+c+' cm groß. Wie lang sind alle Kanten zusammen? (Kantenmodell aus Draht, in cm)',
       4*(a+b+c), 'Von jeder Kantenlänge gibt es 4 Stück: 4 · ('+a+' + '+b+' + '+c+') = 4 · '+(a+b+c)+' = '+(4*(a+b+c))+' cm.', {einheit:'cm'});
   }
-  return tf('Jede Anordnung aus 6 Quadraten ist ein gültiges Würfelnetz.', false,
-    'Nein. Es gibt genau 11 verschiedene Würfelnetze. Legt man die 6 Quadrate z. B. alle in eine Reihe, lässt sich daraus kein Würfel falten.');
+  return pick([
+    function(){ return tf('Jede Anordnung aus 6 Quadraten ist ein gültiges Würfelnetz.', false,'Nein. Legt man die 6 Quadrate z. B. alle in eine Reihe, lässt sich daraus kein Würfel falten.'); },
+    function(){ return tf('Es gibt genau 11 verschiedene Würfelnetze.', true,'Ja, genau 11 (gedrehte und gespiegelte Netze zählen nicht extra).'); },
+    function(){ return tf('Das Netz eines Quaders besteht aus 6 Rechtecken.', true,'Ja, ein Quader hat 6 Rechteckflächen.'); }
+  ])();
 };
 
 GEN.t603 = function(l){
