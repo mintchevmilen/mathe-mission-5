@@ -1,5 +1,5 @@
 /* Mathe Mission 5 — Service Worker (Offline-Nutzung, schnelles Laden) */
-var CACHE = 'mathe-mission-5-v3';
+var CACHE = 'mathe-mission-5-v4';
 var DATEIEN = [
   './','./index.html','./css/app.css',
   './js/data.js','./js/gen.js','./js/state.js','./js/ui.js','./js/exam.js','./js/games.js','./js/app.js',
